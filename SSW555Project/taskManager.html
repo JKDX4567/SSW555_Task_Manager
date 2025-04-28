@@ -102,7 +102,6 @@
                 <select id="dueDate">
                     <option value="dueDate">Sort By Date</option>
                     <option value="earliest">Earliest</option>
-                    <option value="last">Latest</option>
                 </select>
             </div>
             <div id="tasksContainer">
@@ -256,46 +255,55 @@
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
 
-        // Render tasks based on filters
         function renderTasks() {
             if (!currentUser) return;
-            
+
             const categoryFilter = filterCategory.value;
             const statusFilter = filterStatus.value;
-            
+            const dateFilter = dueDate.value;
+
             let filteredTasks = tasks.filter(task => task.user === currentUser);
-            
+
             if (categoryFilter) {
                 filteredTasks = filteredTasks.filter(task => task.category === categoryFilter);
             }
-            
+
             if (statusFilter === 'active') {
                 filteredTasks = filteredTasks.filter(task => !task.completed);
             } else if (statusFilter === 'completed') {
                 filteredTasks = filteredTasks.filter(task => task.completed);
             }
-            
+
+            if (dateFilter === 'earliest') {
+                filteredTasks.sort((a, b) => {
+                    if (!a.dueDate) return 1;
+                    if (!b.dueDate) return -1;
+                    return new Date(a.dueDate) - new Date(b.dueDate);
+                });
+            } 
+
             if (filteredTasks.length === 0) {
                 tasksContainer.innerHTML = '<div class="no-tasks">No tasks match your filters.</div>';
                 return;
             }
-            
+
             tasksContainer.innerHTML = '';
-            
+
             filteredTasks.forEach(task => {
                 const taskElement = document.createElement('div');
                 taskElement.className = `task ${task.completed ? 'completed' : ''}`;
-                
-                const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date';
-                const dueClass = task.dueDate && new Date(task.dueDate) < new Date() && !task.completed ? 'task-due overdue' : 'task-due';
-                
+
+                const dueDateDisplay = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date';
+                const dueClass = task.dueDate && new Date(task.dueDate) < new Date() && !task.completed
+                    ? 'task-due overdue' : 'task-due';
+
                 taskElement.innerHTML = `
                     <div class="task-info">
                         <div class="task-title">${task.title}</div>
                         ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
                         <div class="task-meta">
                             ${task.category ? `<span class="task-category">${task.category}</span>` : ''}
-                            <span class="${dueClass}">${dueDate}</span>
+                            <span class="${dueClass}">${dueDateDisplay}</span>
                         </div>
                     </div>
                     <div class="task-actions">
@@ -306,78 +314,61 @@
                         <button class="btn-danger delete-task">Delete</button>
                     </div>
                 `;
-                
+
                 tasksContainer.appendChild(taskElement);
-                
-                // Add event listeners
+
                 taskElement.querySelector('.toggle-complete').addEventListener('click', () => {
                     updateTask(task.id, { completed: !task.completed });
                 });
-                
+
                 taskElement.querySelector('.delete-task').addEventListener('click', () => {
                     if (confirm('Are you sure you want to delete this task?')) {
                         deleteTask(task.id);
                     }
                 });
-                
+
                 taskElement.querySelector('.edit-task').addEventListener('click', () => {
                     editTask(task);
                 });
             });
         }
 
-        // Edit task function
-        function editTask(task) {
-            // Fill the form with task data
-            document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskDescription').value = task.description || '';
-            document.getElementById('taskDueDate').value = task.dueDate || '';
-            document.getElementById('taskCategory').value = task.category || '';
-            
-            // Change form to edit mode
-            taskForm.querySelector('button[type="submit"]').textContent = 'Update Task';
-            taskForm.dataset.editingId = task.id;
-            
-            // Scroll to form
-            document.querySelector('.task-form').scrollIntoView({ behavior: 'smooth' });
-        }
-
         // Update category filter options
         function updateCategoryFilter() {
             const categories = new Set();
-            tasks.forEach(task => {
-                if (task.category) {
-                    categories.add(task.category);
-                }
-            });
-            
-            // Keep the current selection
-            const currentValue = filterCategory.value;
-            
-            // Clear and rebuild options
-            filterCategory.innerHTML = '<option value="">All Categories</option>';
-            
-            // Add standard options
-            const standardCategories = ['work', 'personal', 'health', 'family', 'finance'];
-            standardCategories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-                filterCategory.appendChild(option);
-            });
-            
-            // Add any custom categories from tasks
-            categories.forEach(cat => {
-                if (!standardCategories.includes(cat)) {
+                tasks.forEach(task => {
+                    if (task.category) {
+                        categories.add(task.category);
+                    }
+                });
+                
+                // Keep the current selection
+                const currentValue = filterCategory.value;
+                
+                // Clear and rebuild options
+                filterCategory.innerHTML = '<option value="">All Categories</option>';
+                
+                // Add standard options
+                const standardCategories = ['work', 'personal', 'health', 'family', 'finance'];
+                standardCategories.forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat;
-                    option.textContent = cat;
+                    option.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
                     filterCategory.appendChild(option);
-                }
-            });
-            
-            // Restore selection
-            filterCategory.value = currentValue;
+                });
+                
+                // Add any custom categories from tasks
+                categories.forEach(cat => {
+                    if (!standardCategories.includes(cat)) {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat;
+                        filterCategory.appendChild(option);
+                    }
+                });
+                
+                // Restore selection
+                filterCategory.value = currentValue;
         }
 
         // Event Listeners
@@ -427,6 +418,7 @@
 
         filterCategory.addEventListener('change', renderTasks);
         filterStatus.addEventListener('change', renderTasks);
+        dueDate.addEventListener('change', renderTasks);
 
         // Initialize the app
         init();
