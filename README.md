@@ -1,7 +1,7 @@
 # SSW555_Task_Manager
 Group Project for SSW555
 
-## Database Installation
+## Database Installation and Setup
 1. Run the command ```psql -U postgres```
 2. Create the postgres database using ```CREATE DATABASE task_manager;```
 3. Switch to the database using ```\c task_manager```
