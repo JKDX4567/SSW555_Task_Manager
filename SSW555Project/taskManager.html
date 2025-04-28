@@ -38,7 +38,7 @@
                 <div class="form-group">
                     <label for="signupName">Name</label>
                     <input type="text" id="signupName" required>
-                </div>
+                </div> 
                 <div class="form-group">
                     <label for="signupEmail">Email</label>
                     <input type="email" id="signupEmail" required>
@@ -98,6 +98,11 @@
                     <option value="all">All Tasks</option>
                     <option value="active">Active Only</option>
                     <option value="completed">Completed Only</option>
+                </select>
+                <select id="dueDate">
+                    <option value="dueDate">Sort By Date</option>
+                    <option value="earliest">Earliest</option>
+                    <option value="last">Latest</option>
                 </select>
             </div>
             <div id="tasksContainer">
