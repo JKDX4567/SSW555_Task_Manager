@@ -19,7 +19,7 @@ CREATE TABLE accounts (
    CREATE TABLE tasks ( 
     id SERIAL PRIMARY KEY,
     status,
-    category,
+    category TEXT,
     due_date,
     title TEXT NOT NULL,
     description TEXT
